@@ -4,7 +4,7 @@ import { isNonNullObject } from './objects';
 function deepFreeze(value: any) {
   const workSet = new Set([value]);
   workSet.forEach(obj => {
-    if (isNonNullObject(obj) && shallowFreeze(obj) === obj) {
+    if (isNonNullObject(obj) && !isMarkedImmutable(obj) && shallowFreeze(obj) === obj) {
       Object.getOwnPropertyNames(obj).forEach(name => {
         if (isNonNullObject(obj[name])) workSet.add(obj[name]);
       });
@@ -13,8 +13,12 @@ function deepFreeze(value: any) {
   return value;
 }
 
+function isMarkedImmutable(obj: any): boolean {
+  return obj[isImmutable] || obj.constructor?.[isImmutable];
+}
+
 function shallowFreeze<T extends object>(obj: T): T | null {
-  if (__DEV__ && !Object.isFrozen(obj)) {
+  if (!Object.isFrozen(obj)) {
     try {
       Object.freeze(obj);
     } catch (e) {
@@ -27,6 +31,8 @@ function shallowFreeze<T extends object>(obj: T): T | null {
   }
   return obj;
 }
+
+export const isImmutable = Symbol('isImmutable');
 
 export function maybeDeepFreeze<T>(obj: T): T {
   if (__DEV__) {

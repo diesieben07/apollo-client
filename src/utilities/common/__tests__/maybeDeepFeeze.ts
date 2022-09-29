@@ -1,4 +1,4 @@
-import { maybeDeepFreeze } from '../maybeDeepFreeze';
+import {isImmutable, maybeDeepFreeze} from '../maybeDeepFreeze';
 
 describe('maybeDeepFreeze', () => {
   it('should deep freeze', () => {
@@ -37,5 +37,23 @@ describe('maybeDeepFreeze', () => {
     expect(Object.isFrozen(result.buffer)).toBe(false);
     expect(Object.isFrozen(result.buffer.doNotFreeze)).toBe(false);
     expect(result.buffer.doNotFreeze).toEqual({ please: "thanks" });
+  });
+
+  it('should not freeze objects marked as immutable', () => {
+    const result = maybeDeepFreeze({
+      [isImmutable]: true,
+      bar: 1
+    });
+    expect(Object.isFrozen(result)).toBe(false);
+  });
+
+  it('should not freeze child properties of objects marked as immutable', () => {
+    const result = maybeDeepFreeze({
+      [isImmutable]: true,
+      child: {
+        bar: 1
+      }
+    });
+    expect(Object.isFrozen(result.child)).toBe(false);
   });
 });
